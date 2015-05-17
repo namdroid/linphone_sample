@@ -1,0 +1,52 @@
+[net]
+download_bw=380
+upload_bw=380
+#Firewall policy:
+# 0: assume there is no nat
+# 1: use firewall address supplied in "nat_address" item (discouraged)
+# 2: use STUN to discover its own public IP address and ports
+# 3: use ICE.
+firewall_policy=0
+#Network's Maximum Transmission Unit
+# Use 0 to allow automatic discovery, otherwise set to a number of bytes.
+# This parameter is only meaningful with video streams for which RTP packets are big.
+mtu=0
+#STUN server address to use when in firewall_policy=2
+stun_server=stun.ekiga.net
+
+[sip]
+use_info=1
+use_ipv6=0
+keepalive_period=30000
+sip_random_port=1
+sip_port=5060
+auto_net_state_mon=1
+
+
+
+[video]
+size=qvga
+#Size of sent video among these names: QCIF, QVGA, CIF, VGA, SVGA
+
+#Whether video is enabled:
+enabled=0
+#You can refine whether it is enabled for display or capture or both
+display=0
+capture=0
+#Show local preview between calls.
+show_local=0
+#Show local view during calls, in a corner of the video window
+self_view=1
+#Webcam name for capture
+#device=V4L2: /dev/video0
+[app]
+sharing_server=https://www.linphone.org:444/upload.php
+tunnel=disabled
+
+[tunnel]
+host=
+port=443
+
+
+#[misc]
+#config-uri=http://10.0.1.200:8888/asterisk/static/6206.xml

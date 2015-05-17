@@ -1,0 +1,86 @@
+[net]
+mtu=1300
+
+[sip]
+inc_timeout=15
+register_only_when_network_is_up=1
+auto_net_state_mon=0
+auto_answer_replacing_calls=1
+media_encryption_mandatory=0
+ping_with_options=0
+
+[proxy_0]
+#SIP address of the proxy
+reg_proxy=sip:10.0.1.200
+#SIP identity for which you are known on this proxy:
+reg_identity=
+#Expiration period of the registration in seconds
+reg_expires=3600
+#Whether to send a register or not
+reg_sendregister=1
+#Route: SIP server address to send all outgoing SIP requests
+#It is usually left blank, otherwise it is commonly used to specify this proxy 
+#must be used as an outbound proxy, for example:
+# reg_route=sip:example.net 
+reg_route=
+#Send a PUBLISH request to the proxy to notify about presence information (online, busy, out to lunch)
+publish=0
+#whether "+" in phone numbers should be replaced by 00
+dial_escape_plus=0
+#Phone number prefix to be applied to entered destinations.
+#Example: prefix=+33
+prefix=
+
+#[auth_info_0]
+#username=6206
+#userid=6206
+#passwd=commend12
+
+#SIP authentication realm (= authentication domain), can be left empty if realm is not known.
+realm="10.0.1.200"
+
+[rtp]
+audio_rtp_port=7076
+video_rtp_port=9078
+audio_jitt_comp=60
+video_jitt_comp=60
+nortp_timeout=30
+disable_upnp=1
+
+[sound]
+playback_dev_id=
+ringer_dev_id=
+capture_dev_id=
+remote_ring=/data/data/org.linphone.mini/files/ringback.wav
+local_ring=/data/data/org.linphone.mini/files/oldphone_mono.wav
+dtmf_player_amp=0.1
+
+#Automatic gain control (of mic input) - turns on or off:
+agc=0
+
+#static software gain (linear scale) to be applied to microphone signal
+
+mic_gain=1.0
+# play back in db normal=0
+playback_gain_db=-10  
+
+[video]
+size=qvga
+#Size of sent video among these names: QCIF, QVGA, CIF, VGA, SVGA
+
+#Whether video is enabled:
+enabled=0
+#You can refine whether it is enabled for display or capture or both
+display=0
+capture=0
+#Show local preview between calls.
+show_local=0
+#Show local view during calls, in a corner of the video window
+self_view=1
+#Webcam name for capture
+#device=V4L2: /dev/video0
+
+[misc]
+max_calls=10
+# set any dummy url here !
+config-uri=http://10.0.1.200:8888/asterisk/static/6210_test.xml
