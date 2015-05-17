@@ -39,6 +39,7 @@ import org.linphone.core.LinphoneCore.RegistrationState;
 import org.linphone.mediastream.Log;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -74,10 +75,12 @@ public class LinphoneMiniActivity extends Activity {
     private Button sendAlarmButton;
     private Button cancelAlarmButton;
     ManagerConnectionFactory factory;
+    protected Context mContext; 
 //    private String confRoomNr = "789";
 //    private String agentClient = "01109";
 //    private String aliceClient = "6207";
     private String callId = "Bob is calling";
+
     private String serverIP = "10.0.1.200";
     private String password = "commend12";
    // private String serverIP = "192.168.178.41";
@@ -109,9 +112,13 @@ public class LinphoneMiniActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
-		mManager = new LinphoneMiniManager(this);
+		mContext = this;
+		 
+	    etSipUser = (EditText) findViewById(R.id.etSipUser);
+	    String userid = etSipUser.getText().toString();
+	    
+		mManager = new LinphoneMiniManager(this,"SIP:" + userid + "@" + serverIP, password);
 		
-
 	    // ShakeDetector initialization
 	    mSensorManager = (SensorManager) getSystemService(this.SENSOR_SERVICE);
 	    mAccelerometer = mSensorManager
@@ -148,16 +155,6 @@ public class LinphoneMiniActivity extends Activity {
 			}
 		});
 	    
-	    btnUnregister = (Button) findViewById(R.id.unregButton);
-	    btnUnregister.setOnClickListener(new OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-	    	    tvRegStat.setText("Unregistering...");
-				(new UnRegisterSipUser()).execute();
-			}
-		});
-	    
 	    
 	    callButton = (Button) findViewById(R.id.alarmButton);
 	    callButton.setOnClickListener(new OnClickListener() {
@@ -166,8 +163,7 @@ public class LinphoneMiniActivity extends Activity {
 			public void onClick(View v) {
 				etAgent = (EditText) findViewById(R.id.etAgent);
 				String agentnr = etAgent.getText().toString();
-				mManager.getInstance().newOutgoingCall(agentnr, callId);
-				
+				mManager.getInstance().newOutgoingCall(agentnr, callId);				
 				
 			}
 		});
@@ -344,130 +340,9 @@ public class LinphoneMiniActivity extends Activity {
         }
     }
     
-    protected void register(String sipAddress, String password)  {
-    	final LinphoneCoreFactory lcFactory = LinphoneCoreFactory.instance();
-		LinphoneCore lc  = mManager.getLc();
-		
-		
-		try {
-			
-			// Parse identity
-			LinphoneAddress address = lcFactory.createLinphoneAddress(sipAddress);
-			String username = address.getUserName();
-			String domain = address.getDomain();
 
-
-			if (password != null) {
-				// create authentication structure from identity and add to linphone
-				lc.addAuthInfo(lcFactory.createAuthInfo(username, password, null, domain));
-			}
-
-			// create proxy config
-			LinphoneProxyConfig proxyCfg = lc.createProxyConfig(sipAddress, domain, null, true);
-			proxyCfg.setExpires(3600);
-			lc.addProxyConfig(proxyCfg); // add it to linphone
-			lc.setDefaultProxyConfig(proxyCfg);
-
-			
-			// main loop for receiving notifications and doing background linphonecore work
-			running = true;
-			while (running) {
-				lc.iterate(); // first iterate initiates registration 
-				sleep(50);
-			}
-
-
-			// Unregister
-			lc.getDefaultProxyConfig().edit();
-			lc.getDefaultProxyConfig().enableRegister(false);
-			lc.getDefaultProxyConfig().done();
-			while(lc.getDefaultProxyConfig().getState() != RegistrationState.RegistrationCleared) {
-				lc.iterate();
-				sleep(50);
-			}
-
-			// Then register again
-			lc.getDefaultProxyConfig().edit();
-			lc.getDefaultProxyConfig().enableRegister(true);
-			lc.getDefaultProxyConfig().done();
-
-			while(lc.getDefaultProxyConfig().getState() != RegistrationState.RegistrationOk
-					&& lc.getDefaultProxyConfig().getState() != RegistrationState.RegistrationFailed) {
-				lc.iterate();
-				sleep(50);
-			}
-
-			// Automatic unregistration on exit
-		}	 catch (LinphoneCoreException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		
-		finally {
-			displayCustomToast("Registration done!", 20);
-		}
-    }
-    
-    
-    protected void unregister(String sipAddress) throws LinphoneCoreException  {
-    	final LinphoneCoreFactory lcFactory = LinphoneCoreFactory.instance();
-		LinphoneCore lc  = mManager.getLc();
-
-			
-			LinphoneAddress address = lcFactory.createLinphoneAddress(sipAddress);
-			String username = address.getUserName();
-			String domain = address.getDomain();
-			
-			if (password != null) {
-				// create authentication structure from identity and add to linphone
-				lc.addAuthInfo(lcFactory.createAuthInfo(username, password, null, domain));
-			}
-			
-			LinphoneProxyConfig proxyCfg = lc.createProxyConfig(sipAddress, domain, null, true);
-			proxyCfg.setExpires(0);
-			lc.addProxyConfig(proxyCfg); // add it to linphone
-			lc.setDefaultProxyConfig(proxyCfg);
-			
-			// Unregister
-			lc.getDefaultProxyConfig().edit();
-			lc.getDefaultProxyConfig().enableRegister(false);
-			lc.getDefaultProxyConfig().done();
-			while(lc.getDefaultProxyConfig().getState() != RegistrationState.RegistrationCleared) {
-				lc.iterate();
-				sleep(50);
-			}
-
-			// Automatic unregistration on exit
-	
-
-    }
-    
-    private class UnRegisterSipUser extends AsyncTask<String, String, String> {
-        protected String doInBackground(String... confRoomExtension) {
-
-            String response = "";
- 
-    	    etSipUser = (EditText) findViewById(R.id.etSipUser);
-    	    String userid = etSipUser.getText().toString();
-    	    try {
-				unregister("SIP:" + userid + "@" + serverIP);
-			} catch (LinphoneCoreException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-            return response;
-        }
-
-        protected void onProgressUpdate(String... progress) {
-
-        }
-
-        protected void onPostExecute(String response) {
-        	// print out whether the originate succeeded or not
-        	Log.e(response); // "Success" ?
-        }
-    }
+   
+  
     
     private class RegisterSipUser extends AsyncTask<String, String, String> {
         protected String doInBackground(String... confRoomExtension) {
@@ -477,7 +352,8 @@ public class LinphoneMiniActivity extends Activity {
     	    etSipUser = (EditText) findViewById(R.id.etSipUser);
     	    String userid = etSipUser.getText().toString();
     	    
-			register("SIP:" + userid + "@" + serverIP, password);
+    	    mManager.destroy();
+    	    mManager = new LinphoneMiniManager(mContext, "SIP:" + userid + "@" + serverIP, password);
 			
             return response;
         }

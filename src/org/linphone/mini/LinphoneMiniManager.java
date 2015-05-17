@@ -81,7 +81,7 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
 		return regState;
 	}
 
-	public LinphoneMiniManager(Context c) {
+	public LinphoneMiniManager(Context c, String sipAddress, String password) {
 		mContext = c;
 		LinphoneCoreFactory.instance().setDebugMode(true, "SIC Mini");
 		
@@ -90,11 +90,15 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
 		try {
 			String basePath = mContext.getFilesDir().getAbsolutePath();
 			copyAssetsFromPackage(basePath);
-			mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, basePath + "/.linphonerc", basePath + "/linphonerc", null, mContext);
-			initLinphoneCoreValues(basePath);
+			// mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, basePath + "/.linphonerc", basePath + "/linphonerc", null, mContext);
+			mLinphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, mContext);
+			//initLinphoneCoreValues(basePath);			
 			
-			setUserAgent();
-			setFrontCamAsDefault();
+			register(sipAddress, password);
+			
+			//setUserAgent();
+			//setFrontCamAsDefault();
+			
 			startIterate();
 			mInstance = this;
 	        mLinphoneCore.setNetworkReachable(true); // Let's assume it's true
@@ -107,6 +111,71 @@ public class LinphoneMiniManager implements LinphoneCoreListener {
 		return mInstance;
 	}
 	
+	
+	protected void register(String sipAddress, String password)  {
+    	final LinphoneCoreFactory lcFactory = LinphoneCoreFactory.instance();
+	
+		try {
+			
+			// Parse identity
+			LinphoneAddress address = lcFactory.createLinphoneAddress(sipAddress);
+			String username = address.getUserName();
+			String domain = address.getDomain();
+
+
+			if (password != null) {
+				// create authentication structure from identity and add to linphone
+				mLinphoneCore.addAuthInfo(lcFactory.createAuthInfo(username, password, null, domain));
+			}
+
+			// create proxy config
+			LinphoneProxyConfig proxyCfg = mLinphoneCore.createProxyConfig(sipAddress, domain, null, true);
+			proxyCfg.setExpires(3600);
+			mLinphoneCore.addProxyConfig(proxyCfg); // add it to linphone
+			mLinphoneCore.setDefaultProxyConfig(proxyCfg);
+
+			
+			// Then register again
+			mLinphoneCore.getDefaultProxyConfig().edit();
+			mLinphoneCore.getDefaultProxyConfig().enableRegister(true);
+			mLinphoneCore.getDefaultProxyConfig().done();
+
+
+			// Automatic unregistration on exit
+		}	 catch (LinphoneCoreException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+
+    }
+	
+	
+	public void unregister(String sipAddress, String password) throws LinphoneCoreException  {
+    	final LinphoneCoreFactory lcFactory = LinphoneCoreFactory.instance();
+		   
+
+			
+			LinphoneAddress address = lcFactory.createLinphoneAddress(sipAddress);
+			String username = address.getUserName();
+			String domain = address.getDomain();
+			
+			if (password != null) {
+				// create authentication structure from identity and add to linphone
+				mLinphoneCore.addAuthInfo(lcFactory.createAuthInfo(username, password, null, domain));
+			}
+			
+			LinphoneProxyConfig proxyCfg = mLinphoneCore.createProxyConfig(sipAddress, domain, null, true);
+			proxyCfg.setExpires(0);
+			mLinphoneCore.addProxyConfig(proxyCfg); // add it to linphone
+			mLinphoneCore.setDefaultProxyConfig(proxyCfg);
+			
+			// Unregister
+			mLinphoneCore.getDefaultProxyConfig().edit();
+			mLinphoneCore.getDefaultProxyConfig().enableRegister(false);
+			mLinphoneCore.getDefaultProxyConfig().done();
+
+    }
+    
 	public void destroy() {
 		try {
 			mTimer.cancel();

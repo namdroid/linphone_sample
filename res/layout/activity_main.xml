@@ -17,11 +17,6 @@
          android:layout_width="wrap_content"
          android:layout_height="wrap_content"
          android:text="Register" />
-     <Button
-         android:id="@+id/unregButton"
-         android:layout_width="wrap_content"
-         android:layout_height="wrap_content"
-         android:text="Unregister" />
      
      <EditText
          android:id="@+id/etSipUser"
@@ -67,7 +62,7 @@
          android:id="@+id/etAgent"
          android:layout_width="wrap_content"
          android:layout_height="wrap_content"
-         android:text="6205" />
+         android:text="10109" />
 </LinearLayout>
 
 <LinearLayout 
